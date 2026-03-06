@@ -10,7 +10,7 @@ const db = new sqlite3.Database(dbPath);
 
 // Middleware cek admin
 function isAdmin(req, res, next) {
-  const adminIds = (process.env.ADMIN_IDS || "").split(",").map(id => id.trim());
+  const adminIds = (process.env.ADMIN_ID || "").split(",").map(id => id.trim());
   const telegramId = req.headers["x-telegram-id"] || req.body?.telegramId;
 
   if (!telegramId || !adminIds.includes(String(telegramId))) {

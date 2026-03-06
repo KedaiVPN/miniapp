@@ -4,7 +4,7 @@ const { Telegraf, Markup } = require("telegraf");
 require("dotenv").config();
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
-const ADMIN_IDS = (process.env.ADMIN_IDS || "").split(",").map(id => id.trim());
+const ADMIN_IDS = (process.env.ADMIN_ID || "").split(",").map(id => id.trim());
 const APP_URL = process.env.APP_URL || "https://your-app.com";
 
 // =============================
