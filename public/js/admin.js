@@ -195,6 +195,86 @@ async function saveServer() {
 }
 
 // ========================
+// Navigasi Tabs
+// ========================
+function switchTab(tabId) {
+  // Update tombol
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  event.currentTarget.classList.add('active');
+
+  // Update konten
+  document.querySelectorAll('.tab-content').forEach(content => {
+    content.classList.remove('active');
+    content.style.display = 'none';
+  });
+
+  const selectedTab = document.getElementById('tab' + tabId.charAt(0).toUpperCase() + tabId.slice(1));
+  selectedTab.classList.add('active');
+  selectedTab.style.display = 'block';
+
+  // Load data spesifik jika perlu
+  if (tabId === 'settings') {
+    loadSettings();
+  }
+}
+
+// ========================
+// Load & Save Pengaturan
+// ========================
+async function loadSettings() {
+  try {
+    const res = await fetch("/api/settings", {
+      headers: { "x-telegram-id": telegramId }
+    });
+    const json = await res.json();
+
+    if (json.success && json.data) {
+      document.getElementById("settingEnabled").checked = (json.data.CREATE_LIMIT_ENABLED === "1");
+      document.getElementById("settingHours").value = json.data.CREATE_LIMIT_HOURS || "1";
+      document.getElementById("settingCount").value = json.data.CREATE_LIMIT_COUNT || "1";
+    }
+  } catch (e) {
+    showToast("Gagal mengambil pengaturan", "error");
+  }
+}
+
+async function saveSettings() {
+  const isEnabled = document.getElementById("settingEnabled").checked ? "1" : "0";
+  const hours = document.getElementById("settingHours").value || "1";
+  const count = document.getElementById("settingCount").value || "1";
+
+  const body = {
+    CREATE_LIMIT_ENABLED: isEnabled,
+    CREATE_LIMIT_HOURS: hours,
+    CREATE_LIMIT_COUNT: count
+  };
+
+  try {
+    const res = await fetch("/api/settings", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-telegram-id": telegramId
+      },
+      body: JSON.stringify(body)
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      showToast(data.message, "success");
+      tg?.HapticFeedback?.notificationOccurred("success");
+    } else {
+      showToast(data.message || "Gagal menyimpan", "error");
+    }
+  } catch (e) {
+    showToast("Terjadi kesalahan saat menyimpan pengaturan", "error");
+  }
+}
+
+// ========================
 // Hapus Server
 // ========================
 async function deleteServer(serverId, serverName) {

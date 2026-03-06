@@ -30,6 +30,15 @@
     <!-- Panel Utama Admin -->
     <div id="adminPanel" style="display:none;">
 
+      <!-- Tabs Navigasi -->
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('servers')">🖥️ Daftar Server</button>
+        <button class="tab-btn" onclick="switchTab('settings')">⚙️ Pengaturan Batas</button>
+      </div>
+
+      <!-- Tab Content: Servers -->
+      <div id="tabServers" class="tab-content active">
+
       <!-- Stats -->
       <div class="stats-grid">
         <div class="stat-card">
@@ -56,6 +65,38 @@
       <div id="serverList">
         <div class="loading-text">Memuat server...</div>
       </div>
+
+      </div> <!-- End Tab Content Servers -->
+
+      <!-- Tab Content: Settings -->
+      <div id="tabSettings" class="tab-content" style="display: none;">
+        <div class="section-title">Pengaturan Batas Akun per User</div>
+        <div class="card" style="padding: 20px;">
+          <div class="form-group" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+            <div>
+              <label style="margin-bottom: 0;">Aktifkan Batasan Pembuatan Akun</label>
+              <div style="font-size: 12px; color: var(--hint); margin-top: 4px;">Aktifkan fitur pembatasan jumlah akun yang bisa dibuat per user dalam waktu tertentu.</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="settingEnabled">
+              <span class="slider round"></span>
+            </label>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Batas Waktu (Jam)</label>
+              <input type="number" id="settingHours" placeholder="Contoh: 1" min="1" />
+            </div>
+            <div class="form-group">
+              <label>Maks. Akun per User</label>
+              <input type="number" id="settingCount" placeholder="Contoh: 1" min="1" />
+            </div>
+          </div>
+
+          <button class="btn-save" style="margin-top: 15px;" onclick="saveSettings()">💾 Simpan Pengaturan</button>
+        </div>
+      </div> <!-- End Tab Content Settings -->
 
     </div>
 
