@@ -195,34 +195,18 @@ async function saveServer() {
 }
 
 // ========================
-// Navigasi Tabs
+// Load & Save Pengaturan (Modal)
 // ========================
-function switchTab(tabId) {
-  // Update tombol
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.classList.remove('active');
-  });
-  event.currentTarget.classList.add('active');
-
-  // Update konten
-  document.querySelectorAll('.tab-content').forEach(content => {
-    content.classList.remove('active');
-    content.style.display = 'none';
-  });
-
-  const selectedTab = document.getElementById('tab' + tabId.charAt(0).toUpperCase() + tabId.slice(1));
-  selectedTab.classList.add('active');
-  selectedTab.style.display = 'block';
-
-  // Load data spesifik jika perlu
-  if (tabId === 'settings') {
-    loadSettings();
-  }
+async function openSettingsModal() {
+  document.getElementById("modalSettingsOverlay").classList.add("open");
+  await loadSettings();
 }
 
-// ========================
-// Load & Save Pengaturan
-// ========================
+function closeSettingsModal(event) {
+  if (event && event.target !== document.getElementById("modalSettingsOverlay")) return;
+  document.getElementById("modalSettingsOverlay").classList.remove("open");
+}
+
 async function loadSettings() {
   try {
     const res = await fetch("/api/settings", {
@@ -265,6 +249,7 @@ async function saveSettings() {
 
     if (data.success) {
       showToast(data.message, "success");
+      closeSettingsModal();
       tg?.HapticFeedback?.notificationOccurred("success");
     } else {
       showToast(data.message || "Gagal menyimpan", "error");

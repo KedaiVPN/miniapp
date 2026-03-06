@@ -1,40 +1,5 @@
 /* public/css/admin.css */
 
-/* Tabs */
-.tabs {
-  display: flex;
-  background: var(--card-bg);
-  border-radius: var(--radius-sm);
-  margin-bottom: 20px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-}
-
-.tab-btn {
-  flex: 1;
-  background: none;
-  border: none;
-  padding: 12px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--hint);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.tab-btn.active {
-  background: var(--accent);
-  color: white;
-}
-
-.tab-content {
-  display: none;
-}
-
-.tab-content.active {
-  display: block;
-}
-
 /* Switch (Toggle) Style */
 .switch {
   position: relative;
@@ -109,22 +74,36 @@ input:checked + .slider:before {
   font-weight: 500;
 }
 
-/* Tambah Server Button */
-.btn-add {
-  width: 100%;
-  background: var(--accent);
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.btn-add, .btn-settings {
+  flex: 1;
   color: white;
   border: none;
   border-radius: var(--radius-sm);
   padding: 13px;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  margin-bottom: 20px;
   transition: opacity 0.2s;
 }
 
-.btn-add:hover { opacity: 0.9; }
+.btn-add {
+  background: var(--accent);
+}
+
+.btn-settings {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.btn-add:hover, .btn-settings:hover { opacity: 0.9; }
 
 /* Section Title */
 .section-title {
@@ -240,19 +219,21 @@ input:checked + .slider:before {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0, 0, 0, 0.7);
   z-index: 100;
   display: flex;
   align-items: flex-end;
   justify-content: center;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.25s;
+  visibility: hidden;
+  transition: opacity 0.25s, visibility 0.25s;
 }
 
 .modal-overlay.open {
   opacity: 1;
-  pointer-events: all;
+  pointer-events: auto;
+  visibility: visible;
 }
 
 .modal-card {
