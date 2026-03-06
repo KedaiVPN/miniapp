@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>VPN Account Generator</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-icon">🔐</div>
+      <h1>VPN Account Generator</h1>
+      <p>Buat akun VPN kamu dengan mudah</p>
+    </div>
+
+    <!-- Form Card -->
+    <div class="card" id="formCard">
+      <!-- Pilihan Protokol -->
+      <div class="form-group">
+        <label>Tipe Akun</label>
+        <div class="protocol-grid">
+          <button class="proto-btn active" data-proto="ssh" onclick="selectProtocol(this, 'ssh')">
+            🔐 SSH
+          </button>
+          <button class="proto-btn" data-proto="vmess" onclick="selectProtocol(this, 'vmess')">
+            💎 Vmess
+          </button>
+          <button class="proto-btn" data-proto="vless" onclick="selectProtocol(this, 'vless')">
+            ⚡ Vless
+          </button>
+          <button class="proto-btn" data-proto="trojan" onclick="selectProtocol(this, 'trojan')">
+            🛡️ Trojan
+          </button>
+        </div>
+      </div>
+
+      <!-- Pilihan Server -->
+      <div class="form-group">
+        <label for="serverSelect">Pilih Server</label>
+        <select id="serverSelect" onchange="onServerChange()">
+          <option value="">⌛ Memuat server...</option>
+        </select>
+      </div>
+
+      <!-- Info Server -->
+      <div class="server-info" id="serverInfo" style="display:none;">
+        <div class="info-row">
+          <span>⏱️ Masa Aktif</span>
+          <span id="infoDuration">-</span>
+        </div>
+        <div class="info-row">
+          <span>📶 Kuota</span>
+          <span id="infoQuota">-</span>
+        </div>
+        <div class="info-row">
+          <span>🖥️ Limit IP</span>
+          <span id="infoIpLimit">-</span>
+        </div>
+      </div>
+
+      <!-- Input Username -->
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input
+          type="text"
+          id="username"
+          placeholder="Masukkan username..."
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="none"
+          spellcheck="false"
+        />
+      </div>
+
+      <!-- Input Password (SSH only) -->
+      <div class="form-group" id="passwordGroup">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          placeholder="Masukkan password..."
+        />
+      </div>
+
+      <!-- Cloudflare Turnstile -->
+      <div class="form-group">
+        <label>Verifikasi Keamanan</label>
+        <div class="turnstile-wrap">
+          <div id="turnstileWidget"></div>
+        </div>
+      </div>
+
+      <!-- Tombol Submit -->
+      <button class="btn-create" id="btnCreate" onclick="submitForm()">
+        <span id="btnText">🚀 Create Account</span>
+        <span id="btnLoader" style="display:none;">⌛ Memproses...</span>
+      </button>
+    </div>
+
+    <!-- Result Card (tersembunyi, muncul setelah sukses) -->
+    <div class="card result-card" id="resultCard" style="display:none;">
+      <div class="result-icon">✅</div>
+      <h2>Akun Berhasil Dibuat!</h2>
+      <p>Detail akun telah dikirim ke chat Telegram kamu.</p>
+      <div class="result-detail" id="resultDetail"></div>
+      <button class="btn-back" onclick="resetForm()">🔄 Buat Akun Lagi</button>
+    </div>
+
+    <!-- Error Toast -->
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

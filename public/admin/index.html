@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Admin Panel - VPN Generator</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/admin.css" />
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Header Admin -->
+    <div class="header">
+      <div class="header-icon">👑</div>
+      <h1>Panel Admin</h1>
+      <p>Manajemen Server VPN</p>
+    </div>
+
+    <!-- Auth Check -->
+    <div class="card" id="authError" style="display:none;">
+      <div style="text-align:center; padding: 20px;">
+        <div style="font-size:48px;margin-bottom:12px;">🚫</div>
+        <h2 style="color:#ef4444;">Akses Ditolak</h2>
+        <p style="color:#8b8b9a;margin-top:8px;">ID Telegram kamu tidak terdaftar sebagai admin.</p>
+      </div>
+    </div>
+
+    <!-- Panel Utama Admin -->
+    <div id="adminPanel" style="display:none;">
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-num" id="statTotal">-</div>
+          <div class="stat-label">Total Server</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statActive">-</div>
+          <div class="stat-label">Server Aktif</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statAccounts">-</div>
+          <div class="stat-label">Total Akun</div>
+        </div>
+      </div>
+
+      <!-- Tombol Tambah Server -->
+      <button class="btn-add" onclick="openModal()">
+        ➕ Tambah Server
+      </button>
+
+      <!-- Daftar Server -->
+      <div class="section-title">Daftar Server</div>
+      <div id="serverList">
+        <div class="loading-text">Memuat server...</div>
+      </div>
+
+    </div>
+
+    <!-- Modal Form Server -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+      <div class="modal-card">
+        <div class="modal-header">
+          <span id="modalTitle">➕ Tambah Server</span>
+          <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+
+        <input type="hidden" id="editServerId" />
+
+        <div class="form-group">
+          <label>Nama Server</label>
+          <input type="text" id="mName" placeholder="Contoh: Server Jakarta 01" />
+        </div>
+
+        <div class="form-group">
+          <label>Domain Server</label>
+          <input type="text" id="mDomain" placeholder="Contoh: vpnsaya.com" autocapitalize="none" />
+        </div>
+
+        <div class="form-group">
+          <label>Auth Key (Rahasia)</label>
+          <input type="text" id="mAuth" placeholder="Auth token server" autocapitalize="none" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Masa Aktif (Hari)</label>
+            <input type="number" id="mDuration" placeholder="30" min="1" />
+          </div>
+          <div class="form-group">
+            <label>Kuota (GB)</label>
+            <input type="number" id="mQuota" placeholder="0 = ∞" min="0" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Limit IP per Akun</label>
+          <input type="number" id="mIpLimit" placeholder="2" min="1" />
+        </div>
+
+        <div class="form-group" id="statusGroup" style="display:none;">
+          <label>Status Server</label>
+          <select id="mStatus">
+            <option value="1">✅ Aktif</option>
+            <option value="0">❌ Nonaktif</option>
+          </select>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-cancel" onclick="closeModal()">Batal</button>
+          <button class="btn-save" onclick="saveServer()">💾 Simpan</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <script src="/js/admin.js"></script>
+</body>
+</html>
