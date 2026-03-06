@@ -58,6 +58,27 @@ function initDatabase() {
       )
     `);
 
+    // Tabel Settings - menyimpan pengaturan global
+    db.run(`
+      CREATE TABLE IF NOT EXISTS Settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      )
+    `, () => {
+      // Inisialisasi pengaturan default jika belum ada
+      const defaultSettings = [
+        { key: "CREATE_LIMIT_ENABLED", value: "0" },
+        { key: "CREATE_LIMIT_HOURS", value: "1" },
+        { key: "CREATE_LIMIT_COUNT", value: "1" }
+      ];
+
+      const stmt = db.prepare("INSERT OR IGNORE INTO Settings (key, value) VALUES (?, ?)");
+      for (const setting of defaultSettings) {
+        stmt.run(setting.key, setting.value);
+      }
+      stmt.finalize();
+    });
+
     console.log("✅ Database berhasil diinisialisasi");
   });
 }

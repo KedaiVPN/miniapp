@@ -10,6 +10,7 @@ const { initDatabase } = require("./db/init");
 const createRoute = require("./routes/create");
 const serversRoute = require("./routes/servers");
 const verifyRoute = require("./routes/verify");
+const settingsRoute = require("./routes/settings");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -30,6 +31,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/api/create", createRoute);
 app.use("/api/servers", serversRoute);
 app.use("/api/verify-turnstile", verifyRoute);
+app.use("/api/settings", settingsRoute);
 
 // Route untuk mengambil konfigurasi publik (site key, dll)
 app.get("/api/config", (req, res) => {

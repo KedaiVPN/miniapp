@@ -16,7 +16,46 @@ router.post("/", (req, res) => {
     return res.status(400).json({ success: false, message: "Parameter tidak lengkap" });
   }
 
-  db.get("SELECT * FROM Server WHERE id = ?", [serverId], async (err, server) => {
+  // Cek pengaturan batasan pembuatan akun
+  db.all("SELECT key, value FROM Settings WHERE key IN ('CREATE_LIMIT_ENABLED', 'CREATE_LIMIT_HOURS', 'CREATE_LIMIT_COUNT')", [], (err, settingsRows) => {
+    if (err) return res.status(500).json({ success: false, message: "Terjadi kesalahan internal (Settings)" });
+
+    const settings = {};
+    settingsRows.forEach(row => settings[row.key] = row.value);
+
+    const isLimitEnabled = settings.CREATE_LIMIT_ENABLED === "1";
+    const limitHours = parseInt(settings.CREATE_LIMIT_HOURS) || 1;
+    const limitCount = parseInt(settings.CREATE_LIMIT_COUNT) || 1;
+
+    // Admin bebas dari limit
+    const adminIds = (process.env.ADMIN_ID || "").split(",").map(id => id.trim());
+    const isAdmin = userId && adminIds.includes(String(userId));
+
+    if (isLimitEnabled && !isAdmin && userId) {
+      // Cek jumlah akun yang dibuat oleh user ini dalam N jam terakhir
+      const timeThreshold = `datetime('now', '-${limitHours} hours')`;
+
+      db.get(`SELECT COUNT(*) as count FROM User WHERE telegram_id = ? AND created_at >= ${timeThreshold}`, [userId], (err, row) => {
+        if (err) return res.status(500).json({ success: false, message: "Terjadi kesalahan internal (Rate Limit)" });
+
+        if (row && row.count >= limitCount) {
+          return res.status(429).json({
+            success: false,
+            message: `Anda telah mencapai batas pembuatan ${limitCount} akun per ${limitHours} jam. Silakan coba lagi nanti.`
+          });
+        }
+
+        // Lanjut ke proses pembuatan jika belum mencapai batas
+        processCreateAccount();
+      });
+    } else {
+      // Fitur limit nonaktif atau user adalah admin, langsung lanjut
+      processCreateAccount();
+    }
+  });
+
+  function processCreateAccount() {
+    db.get("SELECT * FROM Server WHERE id = ?", [serverId], async (err, server) => {
     if (err || !server) {
       return res.status(404).json({ success: false, message: "Server tidak ditemukan" });
     }
@@ -92,7 +131,8 @@ router.post("/", (req, res) => {
 
       return res.status(500).json({ success: false, message: "Gagal menghubungi API server" });
     }
-  });
+    });
+  } // akhir fungsi processCreateAccount
 });
 
 module.exports = router;
