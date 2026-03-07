@@ -37,18 +37,18 @@ router.get("/all", isAdmin, (req, res) => {
 
 // POST /api/servers - Tambah server baru (admin only)
 router.post("/", isAdmin, (req, res) => {
-  const { name, domain, auth, duration, ip_limit, quota } = req.body;
+  const { name, domain, auth, duration, ip_limit, quota, max_users } = req.body;
 
   if (!name || !domain || !auth || !duration || !ip_limit) {
     return res.status(400).json({ success: false, message: "Data server tidak lengkap" });
   }
 
   const stmt = db.prepare(`
-    INSERT INTO Server (name, domain, auth, duration, ip_limit, quota)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO Server (name, domain, auth, duration, ip_limit, quota, max_users)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `);
 
-  stmt.run(name, domain, auth, duration, ip_limit, quota || 0, function (err) {
+  stmt.run(name, domain, auth, duration, ip_limit, quota || 0, max_users ?? 100, function (err) {
     if (err) return res.status(500).json({ success: false, message: "Gagal menambah server" });
 
     // Log
@@ -64,13 +64,13 @@ router.post("/", isAdmin, (req, res) => {
 // PUT /api/servers/:id - Edit server (admin only)
 router.put("/:id", isAdmin, (req, res) => {
   const { id } = req.params;
-  const { name, domain, auth, duration, ip_limit, quota, is_active } = req.body;
+  const { name, domain, auth, duration, ip_limit, quota, max_users, is_active } = req.body;
 
   db.run(`
     UPDATE Server 
-    SET name = ?, domain = ?, auth = ?, duration = ?, ip_limit = ?, quota = ?, is_active = ?
+    SET name = ?, domain = ?, auth = ?, duration = ?, ip_limit = ?, quota = ?, max_users = ?, is_active = ?
     WHERE id = ?
-  `, [name, domain, auth, duration, ip_limit, quota || 0, is_active ?? 1, id], function (err) {
+  `, [name, domain, auth, duration, ip_limit, quota || 0, max_users ?? 100, is_active ?? 1, id], function (err) {
     if (err) return res.status(500).json({ success: false, message: "Gagal mengupdate server" });
     if (this.changes === 0) return res.status(404).json({ success: false, message: "Server tidak ditemukan" });
 

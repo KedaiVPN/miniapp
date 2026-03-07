@@ -52,14 +52,18 @@ function renderServers(servers) {
     return;
   }
 
-  list.innerHTML = servers.map(s => `
+  list.innerHTML = servers.map(s => {
+    const maxUsers = s.max_users !== undefined ? s.max_users : 100;
+    const maxUsersText = maxUsers > 0 ? maxUsers : "∞";
+
+    return `
     <div class="server-item ${s.is_active ? "" : "inactive"}">
       <div class="server-header">
         <div class="server-name">
           <span class="server-status ${s.is_active ? "" : "offline"}"></span>
           ${escHtml(s.name)}
         </div>
-        <span style="font-size:11px;color:var(--hint);">${s.total_create_akun || 0} akun</span>
+        <span style="font-size:11px;color:var(--hint);">${s.total_create_akun || 0}/${maxUsersText} akun</span>
       </div>
       <div class="server-domain">🌐 ${escHtml(s.domain)}</div>
       <div class="server-meta">
@@ -73,7 +77,7 @@ function renderServers(servers) {
         <button class="btn-delete" onclick="deleteServer(${s.id}, '${escHtml(s.name)}')">🗑️ Hapus</button>
       </div>
     </div>
-  `).join("");
+  `}).join("");
 }
 
 // ========================
@@ -103,6 +107,7 @@ function openModal() {
   document.getElementById("mDuration").value = "30";
   document.getElementById("mQuota").value = "0";
   document.getElementById("mIpLimit").value = "2";
+  document.getElementById("mMaxUsers").value = "100";
   document.getElementById("statusGroup").style.display = "none";
   document.getElementById("modalOverlay").classList.add("open");
 }
@@ -127,6 +132,7 @@ async function openEditModal(serverId) {
     document.getElementById("mDuration").value = server.duration;
     document.getElementById("mQuota").value = server.quota;
     document.getElementById("mIpLimit").value = server.ip_limit;
+    document.getElementById("mMaxUsers").value = server.max_users !== undefined ? server.max_users : 100;
     document.getElementById("mStatus").value = server.is_active;
     document.getElementById("statusGroup").style.display = "block";
 
@@ -151,6 +157,7 @@ async function saveServer() {
   const editId = document.getElementById("editServerId").value;
   const isEdit = !!editId;
 
+  const maxUsersVal = document.getElementById("mMaxUsers").value;
   const body = {
     name: document.getElementById("mName").value.trim(),
     domain: document.getElementById("mDomain").value.trim(),
@@ -158,6 +165,7 @@ async function saveServer() {
     duration: parseInt(document.getElementById("mDuration").value) || 30,
     quota: parseInt(document.getElementById("mQuota").value) || 0,
     ip_limit: parseInt(document.getElementById("mIpLimit").value) || 2,
+    max_users: maxUsersVal !== "" ? parseInt(maxUsersVal) : 100,
     is_active: isEdit ? parseInt(document.getElementById("mStatus").value) : 1,
     telegramId: telegramId
   };

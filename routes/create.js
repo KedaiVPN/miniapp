@@ -60,6 +60,12 @@ router.post("/", (req, res) => {
       return res.status(404).json({ success: false, message: "Server tidak ditemukan" });
     }
 
+    // Cek apakah server sudah penuh
+    const maxUsers = server.max_users !== undefined ? server.max_users : 100;
+    if (maxUsers > 0 && server.total_create_akun >= maxUsers) {
+      return res.status(400).json({ success: false, message: "Server ini sudah penuh" });
+    }
+
     // 🔑 Tentukan port berdasarkan pola domain
     const port = server.domain.includes("-upc.") ? 8443 : 5888;
 
