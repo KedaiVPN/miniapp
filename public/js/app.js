@@ -243,8 +243,8 @@ function showResult(data) {
   let html = "";
   if (typeof data === "object" && data !== null) {
     for (const [key, val] of Object.entries(data)) {
-      const isCopyable = key === "tls" || key === "non_tls";
-      const displayKey = key.toUpperCase().replace("_", " ");
+      const isCopyable = key.includes("tls") || key.includes("grpc") || key.includes("go");
+      const displayKey = key.toUpperCase().replace(/_/g, " ");
       
       if (isCopyable) {
         html += `<div style="margin-bottom:12px;">

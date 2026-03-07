@@ -90,55 +90,226 @@ async function sendAccountDetails(telegramId, accountData, protocol, serverName,
 
   const emoji = protocolEmoji[protocol?.toLowerCase()] || "📦";
 
-  let tlsInfo = "";
   let baseAccountData = accountData;
+  let inline_keyboard = [];
+  let linkTexts = [];
 
-  if (protocol?.toLowerCase() === "ssh" && accountData && typeof accountData === "object") {
-    // Ekstrak tls dan non_tls jika ada (dari payload front-end)
-    // Jika tidak ada dari front-end tapi kita punya serverDomain, kita generate
-    const tls = accountData.tls || (serverDomain ? `${serverDomain}:443@${accountData.username || 'user'}:${accountData.password || 'pass'}` : '');
-    const non_tls = accountData.non_tls || (serverDomain ? `${serverDomain}:80@${accountData.username || 'user'}:${accountData.password || 'pass'}` : '');
-    
-    // Jangan tampilkan tls dan non_tls di dalam blok JSON utama
-    const { tls: _tls, non_tls: _non_tls, ...rest } = accountData;
-    baseAccountData = rest;
+  const addLinkOrButton = (label, url) => {
+    if (!url || url.length === 0) return null;
+    if (url.length <= 256) {
+      // Valid for inline button
+      return { text: `📋 Copy ${label}`, copy_text: { text: String(url) } };
+    } else {
+      // Too long for inline button.
+      // Do not append to linkTexts here since we already hardcode all strings
+      // directly inside the ASCII message body templates.
+      return null;
+    }
+  };
 
-    if (tls && non_tls) {
-      tlsInfo = `
-TLS:
-\`${tls}\`
+  if (accountData && typeof accountData === "object") {
+    let tls = "";
+    let nonTls = "";
+    let grpc = "";
+    let go = "";
 
-NON TLS:
-\`${non_tls}\`
-`;
+    const protoName = protocol?.toLowerCase();
+
+    if (protoName === "ssh") {
+      let fallbackDomain = serverDomain || accountData.domain || serverName || "-";
+      let fallbackUsr = accountData.username || 'user';
+      let fallbackPwd = accountData.password || 'pass';
+
+      tls = accountData.tls || `${fallbackDomain}:443@${fallbackUsr}:${fallbackPwd}`;
+      nonTls = accountData.non_tls || `${fallbackDomain}:80@${fallbackUsr}:${fallbackPwd}`;
+
+      // Pisahkan tls dan non_tls dari detail utama khusus untuk SSH
+      const { tls: _tls, non_tls: _non_tls, ...rest } = accountData;
+      baseAccountData = rest;
+
+      // Hapus block tlsInfo yang lama karena sekarang text format khusus ASCII Border sudah diletakkan di `message` variabel di bawah
+      // tlsInfo = `...`;  (Dihapus karena redundancy)
+
+      let row1 = [];
+      const btnTls = addLinkOrButton("TLS", tls);
+      const btnNonTls = addLinkOrButton("NON TLS", nonTls);
+      if (btnTls) row1.push(btnTls);
+      if (btnNonTls) row1.push(btnNonTls);
+      if (row1.length > 0) inline_keyboard.push(row1);
+    } else if (protoName === "vmess" || protoName === "vless") {
+      for (const [key, val] of Object.entries(accountData)) {
+        if (key.includes("tls") && !key.includes("non")) {
+          tls = val;
+        } else if (key.includes("non") && key.includes("tls")) {
+          nonTls = val;
+        } else if (key.includes("grpc")) {
+          grpc = val;
+        }
+      }
+
+      let row1 = [];
+      const btnTls = addLinkOrButton("TLS", tls);
+      const btnNonTls = addLinkOrButton("NON TLS", nonTls);
+      if (btnTls) row1.push(btnTls);
+      if (btnNonTls) row1.push(btnNonTls);
+      if (row1.length > 0) inline_keyboard.push(row1);
+
+      const btnGrpc = addLinkOrButton("GRPC", grpc);
+      if (btnGrpc) {
+        inline_keyboard.push([btnGrpc]);
+      }
+    } else if (protoName === "trojan") {
+      for (const [key, val] of Object.entries(accountData)) {
+        if (key.includes("tls")) {
+          tls = val;
+        } else if (key.includes("go")) {
+          go = val;
+        } else if (key.includes("grpc")) {
+          grpc = val;
+        }
+      }
+
+      let row1 = [];
+      const btnTls = addLinkOrButton("TLS", tls);
+      const btnGo = addLinkOrButton("GO", go);
+      if (btnTls) row1.push(btnTls);
+      if (btnGo) row1.push(btnGo);
+      if (row1.length > 0) inline_keyboard.push(row1);
+
+      const btnGrpc = addLinkOrButton("GRPC", grpc);
+      if (btnGrpc) {
+        inline_keyboard.push([btnGrpc]);
+      }
     }
   }
 
-  let message = `
-${emoji} *Akun ${protocol?.toUpperCase()} Berhasil Dibuat!*
+  const protoName = protocol?.toLowerCase();
+  let message = "";
 
-🖥️ *Server:* ${serverName}
-📋 *Detail Akun:*
-\`\`\`
-${typeof baseAccountData === "object" ? JSON.stringify(baseAccountData, null, 2) : baseAccountData}
-\`\`\`
-${tlsInfo}
-⏰ Akun aktif sesuai konfigurasi server.
-✅ Selamat menggunakan VPN!
-  `.trim();
+  if (protoName === "ssh") {
+    const usr = accountData?.username || "-";
+    const pwd = accountData?.password || "-";
+    const exp = accountData?.expired || accountData?.duration || "-";
+    const ipLmt = accountData?.ip_limit || "-";
+    const domain = serverDomain || accountData?.domain || serverName || "-";
 
-  const extra = { parse_mode: "Markdown" };
+    // Tentukan string TLS/NON-TLS dengan logika fallback karena server API tidak merespon tls/non_tls untuk akun SSH
+    let fallbackTls = accountData?.tls || `${domain}:443@${usr}:${pwd}`;
+    let fallbackNonTls = accountData?.non_tls || `${domain}:80@${usr}:${pwd}`;
+
+    const sshTlsStr = String(fallbackTls).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const sshNonTlsStr = String(fallbackNonTls).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+    message = `
+🔹 <b>Informasi Akun Anda</b>
+┌─────────────────────
+│ Username : <code>${usr}</code>
+│ Password : <code>${pwd}</code>
+└─────────────────────
+┌─────────────────────
+│ Domain   : <code>${domain}</code>
+│ SSH WS   : 80
+│ SSL/TLS  : 443
+└─────────────────────
+🔗 <b>FORMAT AKUN</b>
+───────────────────────
+<b>TLS:</b>
+<code>${sshTlsStr}</code>
+───────────────────────
+<b>NON TLS:</b>
+<code>${sshNonTlsStr}</code>
+┌─────────────────────
+│ Expired: ${exp}
+│ IP Limit: ${ipLmt} Device
+└─────────────────────
+    `.trim();
+  } else {
+    // Tampilan format ASCII Custom untuk VMESS, VLESS, TROJAN
+    const usr = accountData?.username || "-";
+    const domain = serverDomain || accountData?.domain || serverName || "-";
+    const exp = accountData?.expired || accountData?.duration || "-";
+    const ipLmt = accountData?.ip_limit || "-";
+    const quota = accountData?.quota || "Unlimited";
+    const uuid = accountData?.uuid || accountData?.password || "-";
+    const upProto = protocol?.toUpperCase();
+
+    const escapeHTML = (str) => String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+    let tlsStr = "";
+    let nonTlsStr = "";
+    let grpcStr = "";
+
+    if (protoName === "vmess" || protoName === "vless") {
+      for (const [key, val] of Object.entries(accountData || {})) {
+        if (key.includes("tls") && !key.includes("non")) tlsStr = escapeHTML(val);
+        else if (key.includes("non") && key.includes("tls")) nonTlsStr = escapeHTML(val);
+        else if (key.includes("grpc")) grpcStr = escapeHTML(val);
+      }
+
+      message = `
+🔹 <b>Informasi Akun Anda</b>
+┌─────────────────────
+│ Username : <code>${usr}</code>
+│ Domain   : <code>${domain}</code>
+│ Port TLS : 443
+│ Port HTTP: 80
+└─────────────────────
+<b>${upProto} TLS</b>
+<code>${tlsStr}</code>
+──────────────────────
+<b>${upProto} NON TLS</b>
+<code>${nonTlsStr}</code>
+──────────────────────
+<b>${upProto} GRPC</b>
+<code>${grpcStr}</code>
+──────────────────────
+🔒 <b>UUID</b>
+<code>${uuid}</code>
+┌─────────────────────
+│ Expired : ${exp}
+│ Quota   : ${quota}
+│ IP Limit: ${ipLmt} Device
+└─────────────────────
+      `.trim();
+    } else if (protoName === "trojan") {
+      for (const [key, val] of Object.entries(accountData || {})) {
+        if (key.includes("tls")) tlsStr = escapeHTML(val);
+        else if (key.includes("go")) nonTlsStr = escapeHTML(val); // nonTlsStr digunakan untuk GO di Trojan
+        else if (key.includes("grpc")) grpcStr = escapeHTML(val);
+      }
+
+      message = `
+🔹 <b>Informasi Akun Anda</b>
+┌─────────────────────
+│ Username : <code>${usr}</code>
+│ Domain   : <code>${domain}</code>
+│ Port TLS : 443
+│ Port HTTP: 80
+└─────────────────────
+<b>${upProto} TLS</b>
+<code>${tlsStr}</code>
+──────────────────────
+<b>${upProto} GO</b>
+<code>${nonTlsStr}</code>
+──────────────────────
+<b>${upProto} GRPC</b>
+<code>${grpcStr}</code>
+──────────────────────
+🔒 <b>UUID / Password</b>
+<code>${uuid}</code>
+┌─────────────────────
+│ Expired : ${exp}
+│ Quota   : ${quota}
+│ IP Limit: ${ipLmt} Device
+└─────────────────────
+      `.trim();
+    }
+  }
+
+  const extra = { parse_mode: "HTML" };
   
-  if (tlsInfo) {
-    // Tambahkan tombol copy menggunakan fitur copy_text Telegram (Bot API 7.0+)
-    extra.reply_markup = {
-      inline_keyboard: [
-        [
-          { text: "📋 Copy TLS", copy_text: { text: accountData.tls || (serverDomain ? `${serverDomain}:443@${accountData.username || 'user'}:${accountData.password || 'pass'}` : '') } },
-          { text: "📋 Copy NON TLS", copy_text: { text: accountData.non_tls || (serverDomain ? `${serverDomain}:80@${accountData.username || 'user'}:${accountData.password || 'pass'}` : '') } }
-        ]
-      ]
-    };
+  if (inline_keyboard.length > 0) {
+    extra.reply_markup = { inline_keyboard };
   }
 
   try {
