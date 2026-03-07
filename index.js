@@ -22,8 +22,16 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Tambahkan middleware No-Cache untuk mem-bypass aggressive cache Telegram Webview
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '-1');
+  next();
+});
+
 // Sajikan file statis dari folder public
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "public"), { maxAge: 0 }));
 
 // =============================
 // API Routes
@@ -38,6 +46,20 @@ app.get("/api/config", (req, res) => {
   res.json({
     turnstileSiteKey: process.env.TURNSTILE_SITE_KEY || "",
     appUrl: process.env.APP_URL || ""
+  });
+});
+
+// Route untuk otentikasi bahwa user telegram_id pernah menjalankan /start
+app.get("/api/auth", (req, res) => {
+  const telegramId = req.query.uid;
+  if (!telegramId) return res.status(400).json({ success: false, message: "Missing uid parameter" });
+
+  const { db } = require("./db/init");
+
+  db.get("SELECT * FROM TelegramUser WHERE telegram_id = ?", [telegramId], (err, row) => {
+    if (err) return res.status(500).json({ success: false, message: "Database error" });
+    if (!row) return res.status(401).json({ success: false, message: "User not registered in bot" });
+    return res.json({ success: true, user: row });
   });
 });
 
@@ -72,9 +94,11 @@ app.get("/admin", (req, res) => {
 initDatabase();
 
 // Jalankan bot Telegram
-bot.launch()
-  .then(() => console.log("🤖 Bot Telegram berjalan!"))
-  .catch(err => console.error("Gagal menjalankan bot:", err));
+if (process.env.BOT_TOKEN) {
+  bot.launch()
+    .then(() => console.log("🤖 Bot Telegram berjalan!"))
+    .catch(err => console.error("Gagal menjalankan bot:", err));
+}
 
 // Jalankan server Express
 app.listen(PORT, () => {
@@ -83,5 +107,5 @@ app.listen(PORT, () => {
 });
 
 // Graceful shutdown
-process.once("SIGINT", () => bot.stop("SIGINT"));
-process.once("SIGTERM", () => bot.stop("SIGTERM"));
+process.once("SIGINT", () => { if (bot.botInfo) bot.stop("SIGINT") });
+process.once("SIGTERM", () => { if (bot.botInfo) bot.stop("SIGTERM") });

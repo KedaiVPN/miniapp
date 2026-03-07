@@ -22,6 +22,43 @@ let siteKey = "";
 // ========================
 (async function init() {
   try {
+    // Cek apakah diakses dari Telegram Mini App
+    // Terkadang initDataUnsafe belum siap, kita beri waktu sedikit
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    // Fallback menggunakan query param 'uid' yang dikirim dari /start bot
+    const telegramUserId = tg?.initDataUnsafe?.user?.id || getQueryParam("uid");
+
+    // Jika benar-benar tidak ada referensi user (berarti dibuka langsung dari browser),
+    // maka tampilkan overlay akses ditolak dan hentikan inisialisasi
+    if (!telegramUserId) {
+      document.getElementById("telegramOnlyOverlay").style.display = "flex";
+      return;
+    }
+
+    // Cek apakah user sudah terdaftar di bot dengan perintah /start
+    try {
+      const authRes = await fetch(`/api/auth?uid=${telegramUserId}`);
+      const authData = await authRes.json();
+
+      if (!authData.success) {
+        // Modifikasi pesan overlay jika user tidak terdaftar
+        const overlay = document.getElementById("telegramOnlyOverlay");
+        overlay.querySelector("h2").textContent = "Belum Terdaftar";
+        overlay.querySelector("p").textContent = "Harap ketik /start di bot telegram terlebih dahulu.";
+        overlay.style.display = "flex";
+        return;
+      }
+    } catch(e) {
+      console.error("Gagal verifikasi user telegram:", e);
+      document.getElementById("telegramOnlyOverlay").style.display = "flex";
+      return;
+    }
+
+    // Jika valid dan terdaftar di bot, sembunyikan overlay dan tampilkan form
+    document.getElementById("telegramOnlyOverlay").style.display = "none";
+    document.getElementById("mainAppContainer").style.display = "block";
+
     // Ambil konfigurasi dari backend (termasuk Turnstile site key)
     const cfgRes = await fetch("/api/config");
     const cfg = await cfgRes.json();
@@ -169,8 +206,9 @@ async function submitForm() {
   const server = servers.find(s => String(s.id) === String(serverId));
   if (!server) return showToast("Server tidak valid!", "error");
 
-  // Ambil Telegram user ID
-  const userId = tg?.initDataUnsafe?.user?.id || getQueryParam("uid") || null;
+  // Ambil Telegram user ID (di casting ke string agar sesuai DB)
+  const rawId = tg?.initDataUnsafe?.user?.id || getQueryParam("uid");
+  const userId = rawId ? String(rawId) : null;
 
   // Set loading state
   setLoading(true);
@@ -181,6 +219,7 @@ async function submitForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         userId: userId,
+        initData: tg?.initData || "", // Kirim initData untuk divalidasi di backend
         username: username,
         password: currentProtocol === "ssh" ? password : "",
         protocol: currentProtocol,

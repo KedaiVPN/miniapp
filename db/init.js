@@ -75,6 +75,17 @@ function initDatabase() {
       )
     `);
 
+    // Tabel TelegramUser - menyimpan data pengguna bot Telegram (dari /start)
+    db.run(`
+      CREATE TABLE IF NOT EXISTS TelegramUser (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        telegram_id TEXT UNIQUE NOT NULL,
+        username TEXT,
+        first_name TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     // Tabel Settings - menyimpan pengaturan global
     db.run(`
       CREATE TABLE IF NOT EXISTS Settings (

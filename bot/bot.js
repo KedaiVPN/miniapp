@@ -7,12 +7,27 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 const ADMIN_IDS = (process.env.ADMIN_ID || "").split(",").map(id => id.trim());
 const APP_URL = process.env.APP_URL || "https://your-app.com";
 
+// Import koneksi DB untuk mencatat pengguna
+const { db } = require("../db/init");
+
 // =============================
 // /start - Pesan sambutan
 // =============================
 bot.start(async (ctx) => {
   const name = ctx.from.first_name || "Pengguna";
   const userId = String(ctx.from.id);
+  const username = ctx.from.username || null;
+
+  // Simpan data pengguna ke dalam database saat mereka menekan /start
+  db.run(`
+    INSERT INTO TelegramUser (telegram_id, username, first_name)
+    VALUES (?, ?, ?)
+    ON CONFLICT(telegram_id) DO UPDATE SET
+      username = excluded.username,
+      first_name = excluded.first_name
+  `, [userId, username, name], (err) => {
+    if (err) console.error("Gagal mencatat pengguna ke DB:", err.message);
+  });
 
   const welcomeText = `
 👋 *Halo, ${name}!*
