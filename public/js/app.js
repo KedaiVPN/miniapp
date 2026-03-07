@@ -190,6 +190,16 @@ async function submitForm() {
     const data = await res.json();
 
     if (data.success) {
+      // Format data TLS & NON TLS khusus untuk SSH
+      let displayData = data.data;
+      if (currentProtocol === "ssh") {
+        displayData = {
+          ...data.data,
+          tls: `${server.domain}:443@${username}:${password}`,
+          non_tls: `${server.domain}:80@${username}:${password}`
+        };
+      }
+
       // Kirim notifikasi ke Telegram
       if (userId) {
         await fetch("/api/notify", {
@@ -199,12 +209,13 @@ async function submitForm() {
             telegramId: userId,
             accountData: data.data,
             protocol: currentProtocol,
-            serverName: server.name
+            serverName: server.name,
+            serverDomain: server.domain
           })
         });
       }
 
-      showResult(data.data);
+      showResult(displayData);
     } else {
       showToast(data.message || "Gagal membuat akun.", "error");
       window.turnstile?.reset(turnstileWidgetId);
@@ -232,10 +243,23 @@ function showResult(data) {
   let html = "";
   if (typeof data === "object" && data !== null) {
     for (const [key, val] of Object.entries(data)) {
-      html += `<div style="margin-bottom:6px;">
-        <span style="color:#8b8b9a;font-size:12px;">${key.toUpperCase()}</span><br/>
-        <span style="font-weight:600;">${val}</span>
-      </div>`;
+      const isCopyable = key === "tls" || key === "non_tls";
+      const displayKey = key.toUpperCase().replace("_", " ");
+      
+      if (isCopyable) {
+        html += `<div style="margin-bottom:12px;">
+          <span style="color:#8b8b9a;font-size:12px;">${displayKey}</span><br/>
+          <div class="copyable-box" onclick="copyText('${val}', this)">
+            <span style="font-weight:600;font-family:monospace;word-break:break-all;">${val}</span>
+            <span class="copy-icon">📋</span>
+          </div>
+        </div>`;
+      } else {
+        html += `<div style="margin-bottom:6px;">
+          <span style="color:#8b8b9a;font-size:12px;">${displayKey}</span><br/>
+          <span style="font-weight:600;">${val}</span>
+        </div>`;
+      }
     }
   } else {
     html = `<span>${data}</span>`;
@@ -246,6 +270,30 @@ function showResult(data) {
 
   // Haptic feedback
   tg?.HapticFeedback?.notificationOccurred("success");
+}
+
+// ========================
+// Copy Text
+// ========================
+function copyText(text, element) {
+  navigator.clipboard.writeText(text).then(() => {
+    // Beri visual feedback
+    const originalBg = element.style.background;
+    element.style.background = "rgba(34, 197, 94, 0.2)"; // Greenish background
+    const icon = element.querySelector('.copy-icon');
+    if (icon) icon.textContent = "✅";
+    
+    showToast("Disalin ke clipboard!", "success");
+    tg?.HapticFeedback?.selectionChanged();
+
+    setTimeout(() => {
+      element.style.background = originalBg;
+      if (icon) icon.textContent = "📋";
+    }, 2000);
+  }).catch(err => {
+    showToast("Gagal menyalin teks", "error");
+    console.error("Copy failed", err);
+  });
 }
 
 // ========================
