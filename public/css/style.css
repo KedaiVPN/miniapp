@@ -273,6 +273,34 @@ body {
   line-height: 1.7;
 }
 
+.copyable-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255,255,255,0.08);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  margin-top: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.copyable-box:hover {
+  background: rgba(255,255,255,0.12);
+  border-color: var(--accent);
+}
+
+.copyable-box:active {
+  transform: scale(0.98);
+}
+
+.copy-icon {
+  font-size: 16px;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
 .btn-back {
   background: transparent;
   border: 1px solid var(--accent);
