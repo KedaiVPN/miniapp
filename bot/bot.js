@@ -31,13 +31,17 @@ bot.start(async (ctx) => {
 
   const welcomeText = `
 👋 *Halo, ${name}!*
+Welcome To *UNIVERSAL SSH* Mini App
 
-Selamat datang di *VPN Account Generator* 🚀
+Gass akun gratisan coys, Masa aktif account yang kalian buat itu 3 hari. Tolong gunakan account yang kalian buat dengan bijak dan mematuhi rules.🙏
 
-Aplikasi ini memungkinkan kamu membuat akun VPN dengan mudah dan cepat.
+📝Rules:
+🚫No DDOS
+🚫No Torrent
+🚫No Spam
+🚫No Multi Login
 
 ✅ Support: SSH, Vmess, Vless, Trojan
-🔒 Aman & Terverifikasi
 
 Klik tombol di bawah untuk membuka aplikasi 👇
   `.trim();
@@ -45,7 +49,7 @@ Klik tombol di bawah untuk membuka aplikasi 👇
   await ctx.reply(welcomeText, {
     parse_mode: "Markdown",
     ...Markup.inlineKeyboard([
-      [Markup.button.webApp("🚀 Buka Aplikasi VPN", `${APP_URL}?uid=${userId}`)]
+      [Markup.button.webApp("🖱️Buka Mini App", `${APP_URL}?uid=${userId}`)]
     ])
   });
 });
@@ -80,11 +84,11 @@ bot.command("help", async (ctx) => {
 • /help - Tampilkan bantuan ini
 
 *Cara Membuat Akun:*
-1️⃣ Klik "Buka Aplikasi VPN"
+1️⃣ Ketik /start "Buka Mini App"
 2️⃣ Pilih tipe akun (SSH/Vmess/Vless/Trojan)
 3️⃣ Pilih server yang tersedia
 4️⃣ Isi username (dan password jika SSH)
-5️⃣ Selesaikan verifikasi keamanan
+5️⃣ Selesaikan verifikasi keamanan (cloudflare trunstile)
 6️⃣ Klik "Create Account"
 7️⃣ Detail akun akan dikirim ke sini 📩
 
