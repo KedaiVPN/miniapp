@@ -101,6 +101,10 @@ function onServerChange() {
   document.getElementById("infoQuota").textContent = server.quota > 0 ? `${server.quota} GB` : "Unlimited";
   document.getElementById("infoIpLimit").textContent = `${server.ip_limit} Device`;
 
+  const maxUsers = server.max_users !== undefined ? server.max_users : 100;
+  const maxUsersText = maxUsers > 0 ? maxUsers : "∞";
+  document.getElementById("infoUsers").textContent = `${server.total_create_akun || 0} / ${maxUsersText}`;
+
   infoBox.style.display = "block";
 }
 
