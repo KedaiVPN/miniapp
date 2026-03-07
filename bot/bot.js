@@ -80,7 +80,7 @@ bot.command("help", async (ctx) => {
 // =============================
 // Fungsi: Kirim detail akun ke user
 // =============================
-async function sendAccountDetails(telegramId, accountData, protocol, serverName) {
+async function sendAccountDetails(telegramId, accountData, protocol, serverName, serverDomain) {
   const protocolEmoji = {
     ssh: "🔐",
     vmess: "💎",
@@ -90,21 +90,59 @@ async function sendAccountDetails(telegramId, accountData, protocol, serverName)
 
   const emoji = protocolEmoji[protocol?.toLowerCase()] || "📦";
 
+  let tlsInfo = "";
+  let baseAccountData = accountData;
+
+  if (protocol?.toLowerCase() === "ssh" && accountData && typeof accountData === "object") {
+    // Ekstrak tls dan non_tls jika ada (dari payload front-end)
+    // Jika tidak ada dari front-end tapi kita punya serverDomain, kita generate
+    const tls = accountData.tls || (serverDomain ? `${serverDomain}:443@${accountData.username || 'user'}:${accountData.password || 'pass'}` : '');
+    const non_tls = accountData.non_tls || (serverDomain ? `${serverDomain}:80@${accountData.username || 'user'}:${accountData.password || 'pass'}` : '');
+    
+    // Jangan tampilkan tls dan non_tls di dalam blok JSON utama
+    const { tls: _tls, non_tls: _non_tls, ...rest } = accountData;
+    baseAccountData = rest;
+
+    if (tls && non_tls) {
+      tlsInfo = `
+TLS:
+\`${tls}\`
+
+NON TLS:
+\`${non_tls}\`
+`;
+    }
+  }
+
   let message = `
 ${emoji} *Akun ${protocol?.toUpperCase()} Berhasil Dibuat!*
 
 🖥️ *Server:* ${serverName}
 📋 *Detail Akun:*
 \`\`\`
-${typeof accountData === "object" ? JSON.stringify(accountData, null, 2) : accountData}
+${typeof baseAccountData === "object" ? JSON.stringify(baseAccountData, null, 2) : baseAccountData}
 \`\`\`
-
+${tlsInfo}
 ⏰ Akun aktif sesuai konfigurasi server.
 ✅ Selamat menggunakan VPN!
   `.trim();
 
+  const extra = { parse_mode: "Markdown" };
+  
+  if (tlsInfo) {
+    // Tambahkan tombol copy menggunakan fitur copy_text Telegram (Bot API 7.0+)
+    extra.reply_markup = {
+      inline_keyboard: [
+        [
+          { text: "📋 Copy TLS", copy_text: { text: accountData.tls || (serverDomain ? `${serverDomain}:443@${accountData.username || 'user'}:${accountData.password || 'pass'}` : '') } },
+          { text: "📋 Copy NON TLS", copy_text: { text: accountData.non_tls || (serverDomain ? `${serverDomain}:80@${accountData.username || 'user'}:${accountData.password || 'pass'}` : '') } }
+        ]
+      ]
+    };
+  }
+
   try {
-    await bot.telegram.sendMessage(telegramId, message, { parse_mode: "Markdown" });
+    await bot.telegram.sendMessage(telegramId, message, extra);
     return true;
   } catch (e) {
     console.error("Gagal mengirim pesan ke user:", e.message);
