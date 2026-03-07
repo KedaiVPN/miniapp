@@ -22,11 +22,28 @@ function initDatabase() {
         duration INTEGER NOT NULL DEFAULT 30,
         ip_limit INTEGER NOT NULL DEFAULT 2,
         quota INTEGER NOT NULL DEFAULT 10,
+        max_users INTEGER NOT NULL DEFAULT 100,
         is_active INTEGER NOT NULL DEFAULT 1,
         total_create_akun INTEGER NOT NULL DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    // Migrasi jika kolom max_users belum ada pada database yang sudah ada
+    db.all("PRAGMA table_info(Server)", (err, columns) => {
+      if (!err && columns) {
+        const hasMaxUsers = columns.some(col => col.name === 'max_users');
+        if (!hasMaxUsers) {
+          db.run("ALTER TABLE Server ADD COLUMN max_users INTEGER NOT NULL DEFAULT 100", (alterErr) => {
+            if (alterErr) {
+              console.error("❌ Gagal menambahkan kolom max_users:", alterErr.message);
+            } else {
+              console.log("✅ Berhasil menambahkan kolom max_users ke tabel Server");
+            }
+          });
+        }
+      }
+    });
 
     // Tabel User - menyimpan akun VPN yang berhasil dibuat
     db.run(`
