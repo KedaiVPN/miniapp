@@ -213,7 +213,7 @@ async function loadSettings() {
       headers: { "x-telegram-id": telegramId }
     });
     const json = await res.json();
-
+    
     if (json.success && json.data) {
       document.getElementById("settingEnabled").checked = (json.data.CREATE_LIMIT_ENABLED === "1");
       document.getElementById("settingHours").value = json.data.CREATE_LIMIT_HOURS || "1";
