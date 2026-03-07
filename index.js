@@ -44,14 +44,14 @@ app.get("/api/config", (req, res) => {
 // Route untuk notifikasi setelah akun berhasil dibuat
 // (dipanggil dari routes/create.js via internal call atau dari sini langsung)
 app.post("/api/notify", async (req, res) => {
-  const { telegramId, accountData, protocol, serverName } = req.body;
+  const { telegramId, accountData, protocol, serverName, serverDomain } = req.body;
   const { sendAccountDetails } = require("./bot/bot");
 
   if (!telegramId) {
     return res.status(400).json({ success: false, message: "telegramId diperlukan" });
   }
 
-  const sent = await sendAccountDetails(telegramId, accountData, protocol, serverName);
+  const sent = await sendAccountDetails(telegramId, accountData, protocol, serverName, serverDomain);
   res.json({ success: sent });
 });
 
