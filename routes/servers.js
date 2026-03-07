@@ -21,7 +21,7 @@ function isAdmin(req, res, next) {
 
 // GET /api/servers - Ambil semua server aktif (publik, untuk dropdown user)
 router.get("/", (req, res) => {
-  db.all("SELECT id, name, domain, duration, ip_limit, quota FROM Server WHERE is_active = 1", [], (err, rows) => {
+  db.all("SELECT id, name, domain, duration, ip_limit, quota, max_users, total_create_akun FROM Server WHERE is_active = 1", [], (err, rows) => {
     if (err) return res.status(500).json({ success: false, message: "Gagal mengambil data server" });
     res.json({ success: true, data: rows });
   });
