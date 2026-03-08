@@ -236,10 +236,11 @@ async function submitForm() {
       // Format data TLS & NON TLS khusus untuk SSH
       let displayData = data.data;
       if (currentProtocol === "ssh") {
+        const createdUsername = data.data.username || username;
         displayData = {
           ...data.data,
-          tls: `${server.domain}:443@${username}:${password}`,
-          non_tls: `${server.domain}:80@${username}:${password}`
+          tls: `${server.domain}:443@${createdUsername}:${password}`,
+          non_tls: `${server.domain}:80@${createdUsername}:${password}`
         };
       }
 
