@@ -99,6 +99,8 @@ router.post("/", (req, res) => {
       const data = response.data;
 
       if (data.status === "success") {
+        const createdUsername = data.data.username || username;
+
         // ✅ Simpan ke tabel User
         const stmt = db.prepare(`
           INSERT INTO User (telegram_id, username, password, protocol, server_id, duration, quota, ip_limit)
@@ -106,7 +108,7 @@ router.post("/", (req, res) => {
         `);
         stmt.run(
           userId || null,
-          username,
+          createdUsername,
           password || "123",
           protocol,
           serverId,
@@ -129,7 +131,7 @@ router.post("/", (req, res) => {
         `, [
           userId || null,
           "CREATE_ACCOUNT",
-          `Protocol: ${protocol}, Server: ${server.name}, User: ${username}`,
+          `Protocol: ${protocol}, Server: ${server.name}, User: ${createdUsername}`,
           "success"
         ]);
 
