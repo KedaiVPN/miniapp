@@ -17,9 +17,12 @@ const telegramId = tg?.initDataUnsafe?.user?.id || getQueryParam("uid") || "";
 
   // Verifikasi admin di backend (cek header x-telegram-id)
   try {
-    const res = await fetch("/api/servers/all", {
-      headers: { "x-telegram-id": telegramId }
-    });
+    const [res, statsRes] = await Promise.all([
+      fetch("/api/servers/all", {
+        headers: { "x-telegram-id": telegramId }
+      }),
+      fetch(`/api/stats?v=${new Date().getTime()}`)
+    ]);
 
     if (res.status === 403) {
       showAuthError();
@@ -29,6 +32,11 @@ const telegramId = tg?.initDataUnsafe?.user?.id || getQueryParam("uid") || "";
     document.getElementById("adminPanel").style.display = "block";
     const json = await res.json();
     renderServers(json.data || []);
+
+    const statsData = await statsRes.json();
+    if (statsData.success) {
+      document.getElementById("statTotalUsers").textContent = statsData.totalUsers;
+    }
   } catch (e) {
     showAuthError();
   }

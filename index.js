@@ -49,6 +49,15 @@ app.get("/api/config", (req, res) => {
   });
 });
 
+// Route untuk mengambil statistik global (misal: total pengguna)
+app.get("/api/stats", (req, res) => {
+  const { db } = require("./db/init");
+  db.get("SELECT COUNT(*) as total FROM TelegramUser", [], (err, row) => {
+    if (err) return res.status(500).json({ success: false, message: "Database error" });
+    return res.json({ success: true, totalUsers: row.total || 0 });
+  });
+});
+
 // Route untuk otentikasi bahwa user telegram_id pernah menjalankan /start
 app.get("/api/auth", (req, res) => {
   const telegramId = req.query.uid;
