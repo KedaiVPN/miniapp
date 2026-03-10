@@ -67,6 +67,17 @@ let siteKey = "";
     // Render Turnstile setelah dapat site key
     renderTurnstile();
 
+    // Ambil statistik total user
+    try {
+      const statsRes = await fetch(`/api/stats?v=${new Date().getTime()}`);
+      const statsData = await statsRes.json();
+      if (statsData.success) {
+        document.getElementById("totalUserBadge").textContent = `TOTAL USER: ${statsData.totalUsers}`;
+      }
+    } catch (e) {
+      console.error("Gagal memuat statistik pengguna", e);
+    }
+
     // Ambil daftar server
     await loadServers();
 
