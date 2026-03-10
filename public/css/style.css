@@ -47,8 +47,11 @@ body {
 }
 
 .header-icon {
-  font-size: 48px;
-  margin-bottom: 8px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 auto 8px auto;
   display: block;
 }
 
