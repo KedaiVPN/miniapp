@@ -47,8 +47,8 @@ input:checked + .slider:before {
 /* Stats Grid */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
   margin-bottom: 16px;
 }
 
@@ -56,12 +56,12 @@ input:checked + .slider:before {
   background: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 14px 10px;
+  padding: 12px 6px;
   text-align: center;
 }
 
 .stat-num {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 800;
   color: var(--accent);
   line-height: 1;
@@ -69,9 +69,12 @@ input:checked + .slider:before {
 }
 
 .stat-label {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--hint);
   font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Action Buttons */
