@@ -7,6 +7,7 @@ const path = require("path");
 
 const { bot } = require("./bot/bot");
 const { initDatabase } = require("./db/init");
+const { startAutoDeleteCron } = require("./cron/autoDelete");
 const createRoute = require("./routes/create");
 const serversRoute = require("./routes/servers");
 const verifyRoute = require("./routes/verify");
@@ -101,6 +102,9 @@ app.get("/admin", (req, res) => {
 // Inisialisasi
 // =============================
 initDatabase();
+
+// Inisialisasi auto-delete cron job
+startAutoDeleteCron();
 
 // Jalankan bot Telegram
 if (process.env.BOT_TOKEN) {
